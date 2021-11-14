@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>旅遊景點</title><!---注意擺放Css>JS--->
+	<meta name="viewport" content="width=device-width,initial-scale=1.0, shrink-to-fit=no"><!--RWD-->
+	<!--BS4-->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+	<link rel="stylesheet" href="css/Tourspots.css">
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdy4lYtqtF5RWHKZNOUPCIsw-Cmykabg0&callback=initMap&v=weekly" async></script>	
+	
+</head>
+<body>
+	<div id="app">
+       <div class="banner" style="padding-top:100px">
+           <h1 class="h1" style="font-size:100px;color:white; font-weight:bold;text-align:center;">旅遊景點</h1>
+            <div class="btnArea">
+                <button class="btn btn-primary" v-for="item in location">{{item}}</button>
+            </div> 
+       </div>
+		<div id="map"></div>		
+			<div class="Showarea">
+				<div class="card photoCard" v-for="(item,key) in Tourspots">
+					<h2>{{item.Name}}</h2>
+					<img :src="item.Picture.PictureUrl1" alt="">
+					<p>地點:{{item.Address}}</p>
+					<!--<p>注意事項:<mark>{{item.Remarks}}</mark></p>-->
+					<p>連絡電話:{{item.Phone}}</p>
+					<p>營業時間：{{item.OpenTime}}</p>
+					<a href="https://www.google.com.tw/maps" target="_blank">GoogleMap<br>
+						緯度:{{item.Position.PositionLat}}<br>
+						經度:{{item.Position.PositionLon}}
+					</a>
+				</div>
+			</div>                
+        <div class="footer">
+
+        </div>
+	</div><!---//app-->
+
+	<script src="vue.js"></script>	<!---Vue.js--->
+</body>
+<script>
+	//GoogleMap	
+	
+function initMap() {
+    let myLatLng = { lat: 22.633939743041992, lng: 121.49990844726562 };//這項變數可否隨機變換?如果隨機變換則不可用const宣告
+	const map =new google.maps.Map(document.getElementById("map"),{
+    zoom: 12,
+    center: myLatLng,
+  });
+
+  new google.maps.Marker({
+    position: myLatLng,
+    map,
+    title: "Hello World!",
+  });
+
+}
+
+
+//Vue app
+var app = new Vue({
+		el:'#app',
+		data:{
+			text:'helloworld',//測試vue是否起作用
+			rooms:JSON.parse(localStorage.getItem('keydata'))||[],
+			places:JSON.parse(localStorage.getItem('placesData'))||[],//景點
+			Tourspots:JSON.parse(localStorage.getItem('Tourspots'))||[],
+			location:['台東縣','馬祖縣','花蓮縣','澎湖縣','台東縣','連江縣','雲林縣','宜蘭縣','新北市'],	
+		},
+		mounted(){
+			this.getTourspots();
+			this.toLowerCase();	//這是測試
+            this.checkImg();
+		},	
+		methods:{
+			getTourspots(){//get API data
+				const api=`https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot?$top=30&$format=JSON
+`;
+				const myHeaders = new Headers();
+				myHeaders.append('Content-Type', 'application/json');
+                //myHeaders.append('Authorization','Bearer TokenNum');如有需要再看看
+				return fetch(api,{
+					method:'GET',
+					headers:myHeaders,
+				})
+				.then(response=>response.json())
+				.then((result)=>{
+					//console.log(result)
+					this.Tourspots = result;
+					console.log('api回傳如下')
+					console.log(this.Tourspots)
+					localStorage.setItem('Tourspots',JSON.stringify(this.Tourspots));
+					
+				})
+				.catch((error)=>{
+					console.log(error)
+				})
+
+			},
+			
+			toLowerCase(){//this is a testing
+				this.Tourspots.forEach((item,key)=>{
+					console.log('查看')
+					item.ID = item.ID.toLowerCase();
+					console.log(item.ID.toLowerCase())
+					if(item.ZipCode=="951"){
+						item.ZipCode = "951台東縣綠島鄉"
+					}else if(item.ZipCode =='211'){
+						item.ZipCode="211連光縣莒光鄉"
+					}
+				})
+				 console.log(this.Tourspots);
+			}
+		},
+		computed:{},
+    });
+</script>
+
+</html>
+
